@@ -4,6 +4,11 @@
 pipeline {
     agent none  // Each stage gets its own agent
 
+    // Fix for Docker permission issues - set HOME to writable directory
+    environment {
+        HOME = '/tmp'
+    }
+
     stages {
         // ============================================
         // STAGE 1: Code Quality Check (Linting)
@@ -15,8 +20,8 @@ pipeline {
             }
             steps {
                 echo '🔍 STAGE 1: Checking code quality...'
-                sh 'pip install pylint --quiet'
-                sh 'pylint src/calculator.py --disable=C0114,C0115,C0116 --exit-zero || true'
+                sh 'pip install pylint --user --quiet'
+                sh 'python -m pylint src/calculator.py --disable=C0114,C0115,C0116 --exit-zero || true'
                 echo '✅ Linting complete!'
             }
         }
@@ -31,8 +36,8 @@ pipeline {
             }
             steps {
                 echo '🧪 STAGE 2: Running unit tests...'
-                sh 'pip install pytest --quiet'
-                sh 'pytest tests/test_calculator.py -v --tb=short'
+                sh 'pip install pytest --user --quiet'
+                sh 'python -m pytest tests/test_calculator.py -v --tb=short'
                 echo '✅ All tests passed!'
             }
         }
