@@ -1,0 +1,91 @@
+// Jenkinsfile for Calculator App
+// Demonstrates: Multi-Stage, Multi-Agent, Real Testing
+
+pipeline {
+    agent none  // Each stage gets its own agent
+
+    stages {
+        // ============================================
+        // STAGE 1: Code Quality Check (Linting)
+        // Uses: Python with pylint
+        // ============================================
+        stage('Lint') {
+            agent {
+                docker { image 'python:3.12-slim' }
+            }
+            steps {
+                echo '🔍 STAGE 1: Checking code quality...'
+                sh 'pip install pylint --quiet'
+                sh 'pylint src/calculator.py --disable=C0114,C0115,C0116 --exit-zero || true'
+                echo '✅ Linting complete!'
+            }
+        }
+
+        // ============================================
+        // STAGE 2: Unit Tests
+        // Uses: Python with pytest
+        // ============================================
+        stage('Test') {
+            agent {
+                docker { image 'python:3.12-slim' }
+            }
+            steps {
+                echo '🧪 STAGE 2: Running unit tests...'
+                sh 'pip install pytest --quiet'
+                sh 'pytest tests/test_calculator.py -v --tb=short'
+                echo '✅ All tests passed!'
+            }
+        }
+
+        // ============================================
+        // STAGE 3: Build (Package the app)
+        // Uses: Python
+        // ============================================
+        stage('Build') {
+            agent {
+                docker { image 'python:3.12-slim' }
+            }
+            steps {
+                echo '📦 STAGE 3: Building/Packaging the app...'
+                sh 'python src/calculator.py'
+                sh 'echo "Build artifact created (simulated)"'
+                echo '✅ Build complete!'
+            }
+        }
+
+        // ============================================
+        // STAGE 4: Deploy (Simulated)
+        // Uses: Ubuntu
+        // ============================================
+        stage('Deploy') {
+            agent {
+                docker { image 'ubuntu:22.04' }
+            }
+            steps {
+                echo '🚀 STAGE 4: Deploying to production...'
+                sh 'echo "Copying files to production server..."'
+                sh 'sleep 1'
+                sh 'echo "Restarting application service..."'
+                sh 'sleep 1'
+                echo '🎉 Deployment successful!'
+            }
+        }
+    }
+
+    post {
+        success {
+            echo '''
+            =====================================
+            🏆 PIPELINE COMPLETED SUCCESSFULLY!
+            =====================================
+            ✅ Lint: Passed
+            ✅ Test: Passed
+            ✅ Build: Passed
+            ✅ Deploy: Passed
+            '''
+        }
+        failure {
+            echo '❌ Pipeline failed! Check the logs above.'
+        }
+    }
+}
