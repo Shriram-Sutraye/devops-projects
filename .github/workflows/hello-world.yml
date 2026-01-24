@@ -1,0 +1,27 @@
+name: 01 Hello World CI
+
+# 1. Trigger: Run this whenever code is pushed to ANY branch
+on: [push]
+
+# 2. The Logic: What should the robots do?
+jobs:
+  say-hello:
+    # 3. The Runner: Use a Linux machine provided by GitHub
+    runs-on: ubuntu-latest
+
+    steps:
+      # 4. Step 1: Tell the robot to "Check out" (download) our code
+      # This is a pre-made robot from the GitHub Marketplace
+      - name: Fetch Code
+        uses: actions/checkout@v4
+
+      # 5. Step 2: Run a simple shell command
+      - name: Say Hello
+        run: echo "Hello Shriram! Your first CI/CD pipeline is running successfully in 2026!"
+
+      # 6. Step 3: Show some system info (to prove it's a real machine)
+      - name: System Info
+        run: |
+          echo "Current Path: $(pwd)"
+          echo "Operating System: $(uname -a)"
+          echo "Current Date: $(date)"
