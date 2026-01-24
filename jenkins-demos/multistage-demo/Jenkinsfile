@@ -1,0 +1,70 @@
+// Jenkinsfile: Multi-Stage & Multi-Agent Demo
+// Purpose: Learn how stages work and how each stage can use a different agent (Docker container)
+
+pipeline {
+    // "agent none" at the top means: Don't assign a default agent.
+    // Each stage will specify its own.
+    agent none
+
+    stages {
+        // ============================================
+        // STAGE 1: Build (Using Node.js)
+        // ============================================
+        stage('Build with Node') {
+            agent {
+                docker { image 'node:20-alpine' }
+            }
+            steps {
+                echo '🔨 STAGE 1: Building with Node.js...'
+                sh 'node --version'
+                sh 'echo "Simulating npm install && npm run build..."'
+                sh 'sleep 2'
+                echo '✅ Build complete!'
+            }
+        }
+
+        // ============================================
+        // STAGE 2: Test (Using Python)
+        // ============================================
+        stage('Test with Python') {
+            agent {
+                docker { image 'python:3.12-slim' }
+            }
+            steps {
+                echo '🧪 STAGE 2: Running tests with Python...'
+                sh 'python --version'
+                sh 'echo "Simulating pytest..."'
+                sh 'sleep 2'
+                echo '✅ All tests passed!'
+            }
+        }
+
+        // ============================================
+        // STAGE 3: Deploy (Using Ubuntu with Docker CLI)
+        // ============================================
+        stage('Deploy') {
+            agent {
+                docker { image 'ubuntu:22.04' }
+            }
+            steps {
+                echo '🚀 STAGE 3: Deploying application...'
+                sh 'cat /etc/os-release | head -2'
+                sh 'echo "Simulating deployment to production server..."'
+                sh 'sleep 2'
+                echo '🎉 Deployment successful!'
+            }
+        }
+    }
+
+    // ============================================
+    // POST-BUILD ACTIONS
+    // ============================================
+    post {
+        success {
+            echo '🏆 Pipeline finished successfully! All stages completed.'
+        }
+        failure {
+            echo '❌ Pipeline failed. Check the logs above.'
+        }
+    }
+}
