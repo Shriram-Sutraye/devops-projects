@@ -19,10 +19,12 @@ pipeline {
                 docker { image 'python:3.12-slim' }
             }
             steps {
-                echo '🔍 STAGE 1: Checking code quality...'
-                sh 'pip install pylint --user --quiet'
-                sh 'python -m pylint src/calculator.py --disable=C0114,C0115,C0116 --exit-zero || true'
-                echo '✅ Linting complete!'
+                dir('jenkins-demos/calculator-app') {
+                    echo '🔍 STAGE 1: Checking code quality...'
+                    sh 'pip install pylint --user --quiet'
+                    sh 'python -m pylint src/calculator.py --disable=C0114,C0115,C0116 --exit-zero || true'
+                    echo '✅ Linting complete!'
+                }
             }
         }
 
@@ -35,10 +37,12 @@ pipeline {
                 docker { image 'python:3.12-slim' }
             }
             steps {
-                echo '🧪 STAGE 2: Running unit tests...'
-                sh 'pip install pytest --user --quiet'
-                sh 'python -m pytest tests/test_calculator.py -v --tb=short'
-                echo '✅ All tests passed!'
+                 dir('jenkins-demos/calculator-app') {
+                    echo '🧪 STAGE 2: Running unit tests...'
+                    sh 'pip install pytest --user --quiet'
+                    sh 'python -m pytest tests/test_calculator.py -v --tb=short'
+                    echo '✅ All tests passed!'
+                }
             }
         }
 
@@ -51,10 +55,12 @@ pipeline {
                 docker { image 'python:3.12-slim' }
             }
             steps {
-                echo '📦 STAGE 3: Building/Packaging the app...'
-                sh 'python src/calculator.py'
-                sh 'echo "Build artifact created (simulated)"'
-                echo '✅ Build complete!'
+                dir('jenkins-demos/calculator-app') {
+                    echo '📦 STAGE 3: Building/Packaging the app...'
+                    sh 'python src/calculator.py'
+                    sh 'echo "Build artifact created (simulated)"'
+                    echo '✅ Build complete!'
+                }
             }
         }
 
@@ -67,6 +73,7 @@ pipeline {
                 docker { image 'ubuntu:22.04' }
             }
             steps {
+                // No dir() needed here technically as it's just echo, but good practice if we were accessing files
                 echo '🚀 STAGE 4: Deploying to production...'
                 sh 'echo "Copying files to production server..."'
                 sh 'sleep 1'
