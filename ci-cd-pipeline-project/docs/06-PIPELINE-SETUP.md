@@ -1,92 +1,80 @@
-# 06 - Pipeline Setup
+# 06 - Pipeline Setup (Complete)
 
-This document covers setting up the Jenkins pipeline for the Spring Boot application.
-
----
-
-## Overview
-
-The pipeline automates:
-1. **Checkout** - Pull code from GitHub
-2. **Build & Test** - Compile with Maven, run tests
-3. **Static Code Analysis** - Scan with SonarQube
-4. **Build Docker Image** - Create container image
+This section guides you through creating the Jenkins pipeline that ties everything together.
 
 ---
 
-## Prerequisites
-
-Before setting up the pipeline, ensure:
-- ✅ Jenkins is running (port 8080)
-- ✅ SonarQube is running (port 9000)
-- ✅ Docker is installed and Jenkins has Docker access
-- ✅ SonarQube token is saved in Jenkins credentials
-
----
-
-## Step 1: Add SonarQube Credential
-
-1. Go to: **Manage Jenkins** → **Credentials** → **Global**
-2. Click **Add Credentials**
-3. Fill in:
-   - **Kind:** `Secret text`
-   - **Secret:** `sqa_4b03602474d2a964e7265b77440f47a90adc9426`
-   - **ID:** `sonarqube-token`
-   - **Description:** `SonarQube Token`
-4. Click **Create**
+## 🎯 Goal
+Create a "Pipeline" job in Jenkins that:
+1. Pulls code from GitHub
+2. Builds Java Code (Maven)
+3. Scans for Bugs (SonarQube)
+4. Builds Docker Image
+5. Pushes Image to Docker Hub
+6. Updates Deployment Manifest in GitHub
 
 ---
 
-## Step 2: Configure SonarQube Server (Optional)
-
-1. Go to: **Manage Jenkins** → **System**
-2. Scroll to **SonarQube servers**
-3. Check **Environment variables**
-4. Click **Add SonarQube**
-5. Fill in:
-   - **Name:** `sonarqube`
-   - **Server URL:** `http://13.222.248.55:9000`
-   - **Token:** Select `sonarqube-token`
-6. Click **Save**
+## 📋 Prerequisites
+- You must have all 3 credentials in Jenkins (SonarQube, Docker, GitHub).
+- You must have the `Jenkinsfile` in your repository.
 
 ---
 
-## Step 3: Create Pipeline Job
+## 🚀 Step 1: Create the Job
 
-1. Go to Jenkins Dashboard
-2. Click **New Item**
-3. Enter name: `spring-boot-pipeline`
-4. Select **Pipeline**
-5. Click **OK**
-
-### Configure Pipeline
-
-In the job configuration:
-
-1. Scroll to **Pipeline** section
-2. Set **Definition:** `Pipeline script from SCM`
-3. Set **SCM:** `Git`
-4. Set **Repository URL:** `https://github.com/Shriram-Sutraye/devops-projects.git`
-5. Set **Branch:** `*/master`
-6. Set **Script Path:** `Jenkins-Zero-To-Hero/java-maven-sonar-argocd-helm-k8s/spring-boot-app/JenkinsFile`
-7. Click **Save**
+1. Open Jenkins: `http://<YOUR-EC2-IP>:8080`
+2. Click **"New Item"** (top-left menu).
+3. **Enter an item name:** `spring-boot-pipeline`
+4. **Select type:** Click **"Pipeline"** (scrolling down slightly).
+5. Click **"OK"** button at the bottom.
 
 ---
 
-## Step 4: Run the Pipeline
+## ⚙️ Step 2: Configure the Pipeline
 
-1. Click **Build Now**
-2. Watch the stages execute:
-   - Checkout ✅
-   - Build and Test ✅
-   - Static Code Analysis ✅
-   - Build Docker Image ✅
+You are now on the configuration screen. Scroll down to the **"Pipeline"** section (at the bottom).
+
+### Settings to Enter:
+1. **Definition:** Select `Pipeline script from SCM` from the dropdown.
+2. **SCM:** Select `Git`.
+3. **Repository URL:** `https://github.com/<YOUR-GITHUB-USERNAME>/devops-projects.git`
+4. **Branch Specifier:** `*/master` (or `*/main` depending on your repo).
+5. **Script Path:** 
+   ```
+   Jenkins-Zero-To-Hero/java-maven-sonar-argocd-helm-k8s/spring-boot-app/JenkinsFile
+   ```
+   *(Copy this path exactly!)*
+
+6. Click **"Save"** button.
 
 ---
 
-## The Jenkinsfile
+## ▶️ Step 3: Run the Pipeline
 
-Location: `Jenkins-Zero-To-Hero/java-maven-sonar-argocd-helm-k8s/spring-boot-app/JenkinsFile`
+1. You should now be on the job dashboard.
+2. Click **"Build Now"** (left sidebar).
+3. Look at the **"Build History"** (bottom left). You will see a blinking circle.
+4. Click on the **build number** (e.g., `#1`).
+5. Click **"Pipeline Overview"** or **"Console Output"** to see what's happening.
+
+---
+
+## ✅ Step 4: Verify Success
+
+A successful build will show **Green Blocks** for every stage:
+
+1. **Checkout SCM:** Git pull successful.
+2. **Build and Test:** Maven compiled the app.
+3. **Static Code Analysis:** SonarQube checked the code.
+4. **Build and Push Docker Image:** Pushed to your Docker Hub.
+5. **Update Deployment File:** Updated `deployment.yml` in your GitHub.
+
+---
+
+## 📄 Reference: The Final Jenkinsfile
+
+This is the code running inside your pipeline:
 
 ```groovy
 pipeline {
@@ -117,49 +105,40 @@ pipeline {
         }
       }
     }
-    stage('Build Docker Image') {
+    stage('Build and Push Docker Image') {
+      environment {
+        DOCKER_IMAGE = "shriramsutraye/spring-boot-app:${BUILD_NUMBER}"
+        REGISTRY_CREDENTIALS = credentials('docker-cred')
+      }
       steps {
-        sh 'cd Jenkins-Zero-To-Hero/java-maven-sonar-argocd-helm-k8s/spring-boot-app && docker build -t spring-boot-app:${BUILD_NUMBER} .'
-        sh 'echo "Docker image built successfully!"'
+        script {
+          sh 'cd Jenkins-Zero-To-Hero/java-maven-sonar-argocd-helm-k8s/spring-boot-app && docker build -t ${DOCKER_IMAGE} .'
+          def dockerImage = docker.image("${DOCKER_IMAGE}")
+          docker.withRegistry('https://index.docker.io/v1/', "docker-cred") {
+            dockerImage.push()
+          }
+        }
+      }
+    }
+    stage('Update Deployment File') {
+      environment {
+        GIT_REPO_NAME = "devops-projects"
+        GIT_USER_NAME = "Shriram-Sutraye"
+      }
+      steps {
+        withCredentials([string(credentialsId: 'github-token', variable: 'GITHUB_TOKEN')]) {
+          sh '''
+            git config user.email "shriram@example.com"
+            git config user.name "Shriram Sutraye"
+            BUILD_NUMBER=${BUILD_NUMBER}
+            sed -i "s/replaceImageTag/${BUILD_NUMBER}/g" Jenkins-Zero-To-Hero/java-maven-sonar-argocd-helm-k8s/spring-boot-app-manifests/deployment.yml
+            git add Jenkins-Zero-To-Hero/java-maven-sonar-argocd-helm-k8s/spring-boot-app-manifests/deployment.yml
+            git commit -m "Update deployment image to version ${BUILD_NUMBER}"
+            git push https://${GITHUB_TOKEN}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME} HEAD:master
+          '''
+        }
       }
     }
   }
 }
 ```
-
----
-
-## Key Concepts
-
-### Docker Agent
-The pipeline runs inside a Docker container (`abhishekf5/maven-abhishek-docker-agent:v1`) which has Maven pre-installed.
-
-### Docker-in-Docker
-The `-v /var/run/docker.sock:/var/run/docker.sock` flag allows building Docker images from within the container.
-
-### Credentials
-The `withCredentials` block injects the SonarQube token securely without exposing it in logs.
-
----
-
-## Troubleshooting
-
-### "No plugin found for prefix 'sonar'"
-Use the full plugin name:
-```
-mvn org.sonarsource.scanner.maven:sonar-maven-plugin:sonar
-```
-
-### "docker-cred" error
-Docker Hub credentials not configured. Skip the Docker push stage or add credentials.
-
-### Path not found errors
-Ensure paths include `Jenkins-Zero-To-Hero/` prefix since the project is nested.
-
----
-
-## Next Steps
-
-- [ ] Configure Docker Hub credentials for image push
-- [ ] Set up Kubernetes cluster
-- [ ] Configure Argo CD for GitOps deployment
