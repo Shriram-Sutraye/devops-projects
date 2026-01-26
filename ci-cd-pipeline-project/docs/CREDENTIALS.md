@@ -28,7 +28,7 @@ This file contains all credentials and access details for the CI/CD pipeline pro
 | **URL** | http://13.222.248.55:8080 |
 | **Username** | `admin` |
 | **Password** | `Admin123.#` |
-| **Initial Admin Password** | `7cb9e2f91bd8463a80d022f77441bfd2` |
+| **Initial Admin Password** | `a17f0cb4fdc14077bd0b3775655e61c0` *(after reinstall)* |
 
 ---
 
