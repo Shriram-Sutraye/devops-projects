@@ -12,8 +12,8 @@ public class StartApplication {
 
     @GetMapping("/")
     public String index(final Model model) {
-        model.addAttribute("title", "I have successfuly built a sprint boot application using Maven");
-        model.addAttribute("msg", "This application is deployed on to Kubernetes using Argo CD");
+        model.addAttribute("title", "Jenkins Zero to Hero Pipeline is COMPLETE!");
+        model.addAttribute("msg", "This update was deployed automatically by Jenkins, Docker Hub, and Argo CD!");
         return "index";
     }
 
