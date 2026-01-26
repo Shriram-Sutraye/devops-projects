@@ -155,7 +155,7 @@ aws ec2 start-instances --instance-ids <INSTANCE-ID>
 | Field | Value |
 |-------|-------|
 | **Instance ID** | `i-0860e0e7ffe609373` |
-| **Public IP** | `34.205.16.151` |
+| **Public IP** | `13.222.248.55` |
 | **Instance Type** | `t3.large` |
 | **Region** | `us-east-1` |
 | **Key File** | `jenkins.pem` |

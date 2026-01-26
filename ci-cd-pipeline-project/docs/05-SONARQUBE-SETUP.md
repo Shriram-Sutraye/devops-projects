@@ -224,7 +224,7 @@ This is just informational. It means a newer version exists. **You can safely ig
 
 | Field | Value |
 |-------|-------|
-| **URL** | http://34.205.16.151:9000 |
+| **URL** | http://13.222.248.55:9000 |
 | **Username** | `admin` |
 | **Password** | `Admin123.#` |
 | **Token** | `sqa_4b03602474d2a964e7265b77440f47a90adc9426` |

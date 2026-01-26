@@ -234,7 +234,7 @@ sudo cat /var/lib/jenkins/secrets/initialAdminPassword
 
 | Field | Value |
 |-------|-------|
-| **URL** | http://34.205.16.151:8080 |
+| **URL** | http://13.222.248.55:8080 |
 | **Username** | `admin` |
 | **Password** | `Admin123.#` |
 | **Version** | 2.541.1 LTS |
